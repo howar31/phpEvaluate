@@ -62,6 +62,7 @@ class phpEvaluate
 		} while(debug_backtrace()[++$i]['function']);
 		$this->evData[$name]['backtrace'] = array_reverse($backtrace);
 		$this->evData[$name]['deep'] = $i;
+		$this->evData[$name]['logEndTime'] = date('Y-m-d H:i:s');
 
 
 	ERROR:
@@ -79,7 +80,7 @@ class phpEvaluate
 		);
 
 		echo "\n";
-		echo str_pad("Timestamp", 20, " ").
+		echo str_pad("Function Finish Time", 20, " ").
 			 str_pad("\tTime Spent", 13, " ").
 			 str_pad("\tStart and End Time", 41, " ").
 			 str_pad("\t[Type] Evalutate Name", 40, " ").
@@ -115,7 +116,7 @@ class phpEvaluate
 					$indent .= "\t";
 				}
 
-				$report_timestamp = "[".date('Y-m-d H:i:s')."]\t";
+				$report_timestamp = "[".$evType['logEndTime']."]\t";
 				$report_title = str_pad("\t[".$evTypeDisplay[$evType['type']]."] ".$evName, 40, " ");
 				if (empty($evType['parent']))
 				{

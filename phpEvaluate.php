@@ -132,6 +132,10 @@ class phpEvaluate
 		echo str_pad("Function", 20, " ")."\tTotal Time Spent\n";
 		foreach ($durations as $func => $time)
 		{
+			if ('ev' == $func)
+			{
+				$func = 'MAIN';
+			}
 			echo str_pad($func, 20, " ")."\t".number_format($time, 5, '.', '')." secs\n";
 		}
 		echo "\n";

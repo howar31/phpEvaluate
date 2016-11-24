@@ -79,13 +79,21 @@ class phpEvaluate
 		);
 
 		echo "\n";
+		echo str_pad("Timestamp", 20, " ").
+			 str_pad("\tTime Spent", 13, " ").
+			 str_pad("\tStart and End Time", 41, " ").
+			 str_pad("\t[Type] Evalutate Name", 40, " ").
+			 str_pad("\tCall Deep", 10, " ").
+			 str_pad("\t- Traceback", 10, " ").
+			 "\n";
+		$durations = array();
 		foreach ($this->evData as $evName => $evType) {
 			$report_content = "";
 			switch ($evType['type']) {
 				case EV_START:
 				case EV_END:
-					$evDuration = number_format(($evType[EV_END] - $evType[EV_START]), 5, '.', '');
-					$report_content = $evDuration." secs\t(from ".number_format($evType[EV_START], 4, '.', '')." to ".number_format($evType[EV_END], 3, '.', '').")";
+					$evDuration = $evType[EV_END] - $evType[EV_START];
+					$report_content = number_format($evDuration, 5, '.', '')." secs\t(from ".number_format($evType[EV_START], 4, '.', '')." to ".number_format($evType[EV_END], 3, '.', '').")";
 					break;
 
 				case EV_LOG:
@@ -117,6 +125,14 @@ class phpEvaluate
 
 				echo $report_timestamp.$report_content.$report_title.$report_backtrace."\n";
 			}
+			$durations[array_slice($evType['backtrace'], -2, 1)[0]] += $evDuration;
+		}
+		echo "\n";
+		arsort($durations);
+		echo str_pad("Function", 20, " ")."\tTotal Time Spent\n";
+		foreach ($durations as $func => $time)
+		{
+			echo str_pad($func, 20, " ")."\t".number_format($time, 5, '.', '')." secs\n";
 		}
 		echo "\n";
 		return;

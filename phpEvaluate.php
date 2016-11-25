@@ -23,7 +23,7 @@ class phpEvaluate
 				{
 					if (2 < $i)
 					{
-						$name = substr($name, 0, -(strlen((string)$i) + 1))."_".$i++;
+						$name = substr($name, 0, -(strlen((string)($i - 1)) + 1))."_".$i++;
 					}
 					else
 					{
@@ -39,7 +39,7 @@ class phpEvaluate
 				{
 					if (2 < $i)
 					{
-						$name = substr($name, 0, -(strlen((string)$i) + 1))."_".$i++;
+						$name = substr($name, 0, -(strlen((string)($i - 1)) + 1))."_".$i++;
 					}
 					else
 					{
@@ -81,13 +81,14 @@ class phpEvaluate
 
 		echo "\n";
 		echo str_pad("Function Finish Time", 20, " ").
-			 str_pad("\tTime Spent", 13, " ").
-			 str_pad("\tStart and End Time", 41, " ").
-			 str_pad("\t[Type] Evalutate Name", 40, " ").
-			 str_pad("\tCall Deep", 10, " ").
-			 str_pad("\t- Traceback", 10, " ").
-			 "\n";
+		"\t".str_pad("Time Spent", 13, " ").
+		"\t".str_pad("Start and End Time", 41, " ").
+		"\t".str_pad("[Type] Evalutate Name", 30, " ").
+		"\t".str_pad("Call Deep", 10, " ").
+		"\t".str_pad("- Traceback", 10, " ").
+		"\n";
 		$durations = array();
+		$iterations = array();
 		foreach ($this->evData as $evName => $evType) {
 			$report_content = "";
 			switch ($evType['type']) {
@@ -117,7 +118,7 @@ class phpEvaluate
 				}
 
 				$report_timestamp = "[".$evType['logEndTime']."]\t";
-				$report_title = str_pad("\t[".$evTypeDisplay[$evType['type']]."] ".$evName, 40, " ");
+				$report_title = "\t".str_pad("[".$evTypeDisplay[$evType['type']]."] ".$evName, 30, " ");
 				if (empty($evType['parent']))
 				{
 					$evType['parent'] = "MAIN";
@@ -125,19 +126,35 @@ class phpEvaluate
 				$report_backtrace = "\tDEEP: ".$evType['deep']." \t- MAIN => ".implode($evType['backtrace'], " => ");
 
 				echo $report_timestamp.$report_content.$report_title.$report_backtrace."\n";
+
+				$function_name = array_slice($evType['backtrace'], -2, 1)[0];
+				$durations[$function_name] += $evDuration;
+				if (EV_END == $evType['type'])
+				{
+					$iterations[$function_name]++;
+				}
 			}
-			$durations[array_slice($evType['backtrace'], -2, 1)[0]] += $evDuration;
 		}
+		$iterations['MAIN'] = 1;
 		echo "\n";
 		arsort($durations);
-		echo str_pad("Function", 20, " ")."\tTotal Time Spent\n";
+		echo str_pad("Function", 20, " ").
+		"\t".str_pad("Total Time Spent", 16, " ").
+		"\t".str_pad("Iteration", 10, " ").
+		"\t".str_pad("Average Time", 20, " ").
+		"\n";
 		foreach ($durations as $func => $time)
 		{
 			if ('ev' == $func)
 			{
 				$func = 'MAIN';
 			}
-			echo str_pad($func, 20, " ")."\t".number_format($time, 5, '.', '')." secs\n";
+			$average_time = $time / $iterations[$func];
+			echo str_pad($func, 20, " ").
+			"\t".str_pad(number_format($time, 5, '.', '')." secs", 16, " ").
+			"\t".str_pad($iterations[$func], 10, " ").
+			"\t".str_pad(number_format($average_time, 5, '.', '')." secs", 20, " ").
+			"\n";
 		}
 		echo "\n";
 		return;

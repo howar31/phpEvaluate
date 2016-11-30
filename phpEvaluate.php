@@ -162,9 +162,9 @@ class phpEvaluate
 				$reportBacktrace = "MAIN => ".implode($evContent['backtrace'], " => ");
 
 				$functionName = array_slice($evContent['backtrace'], -2, 1)[0];
-				$durations[$functionName] += $evDuration;
 				if (EV_END == $evContent['type'])
 				{
+					$durations[$functionName] += $evDuration;
 					$iterations[$functionName]++;
 				}
 

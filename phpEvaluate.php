@@ -2,6 +2,8 @@
 /**
  * Beginning of Performance Evaluation class
  */
+define('LOGPATH', 'evLog/');
+
 define('EV_START', 'start');		// Main log type, mark as evaluation start point
 define('EV_END',   'end');			// Main log type, mark as evaluation end point
 define('EV_CHECK', 'checkpoint');	// Mark as checkpoint for loop time evaluation
@@ -85,9 +87,10 @@ class phpEvaluate
 		return $ct ? $ct : 0;
 	}
 
-	public function report($show = array(EV_START, EV_END))
+	public function report($filename, $show = array(EV_START, EV_END), $genCSV = false)
 	{
 		$evReport = array();
+		$evReportCSV = array();
 		$durations = array();
 		$iterations = array();
 
@@ -111,6 +114,7 @@ class phpEvaluate
 
 		// Generate evaluation report from data
 		foreach ($this->evData as $evName => $evContent) {
+			$evReportCSV[$evName] = array();
 			foreach ($evContent['logUpdateTime'] as $key => $logUpdateTime) {
 				$reportContent = "";
 				$evDuration = 0;
@@ -166,6 +170,7 @@ class phpEvaluate
 				{
 					$durations[$functionName] += $evDuration;
 					$iterations[$functionName]++;
+					array_push($evReportCSV[$evName], $evDuration);
 				}
 
 				array_push($evReport, array(
@@ -178,30 +183,34 @@ class phpEvaluate
 			}
 		}
 
-		// Print out report
-		echo "\n";
+		// Generate report file
+		if (!is_dir(LOGPATH)) {
+			mkdir(LOGPATH, 0777, true);
+		}
+		$fp = fopen(LOGPATH.$filename.'.log', 'w');
+		fwrite($fp, "\n");
 		foreach ($evReport as $report) {
 			if (!empty($report['content']))
 			{
-				echo
+				fwrite($fp,
 				str_pad($report['timestamp'], 25, " ").
 				str_pad($report['content'], 56, " ").
 				str_pad($report['name'], 34, " ").
 				str_pad($report['deep'], 13, " ").
 				str_pad($report['backtrace'], 10, " ")
-				."\n";
+				."\n");
 			}
 		}
 
-		// Print out summary
+		// Summary
 		$iterations['MAIN'] = 1;
-		echo "\n";
+		fwrite($fp, "\n");
 		arsort($durations);
-		echo str_pad("Function", 25, " ").
+		fwrite($fp, str_pad("Function", 25, " ").
 		str_pad("Total Time Spent", 20, " ").
 		str_pad("Iteration", 13, " ").
 		str_pad("Average Time Spent", 12, " ").
-		"\n";
+		"\n");
 		foreach ($durations as $func => $time)
 		{
 			if ('ev' == $func)
@@ -209,13 +218,28 @@ class phpEvaluate
 				$func = 'MAIN';
 			}
 			$averageTime = $time / $iterations[$func];
-			echo str_pad($func, 25, " ").
+			fwrite($fp, str_pad($func, 25, " ").
 			str_pad(number_format($time, 5, '.', '')." secs", 20, " ").
 			str_pad($iterations[$func], 13, " ").
 			str_pad(number_format($averageTime, 5, '.', '')." secs", 12, " ").
-			"\n";
+			"\n");
 		}
-		echo "\n";
+		fwrite($fp, "\n");
+		fclose($fp);
+
+		// Generate CSV file
+		if ($genCSV)
+		{
+			foreach ($evReportCSV as $func => $data) {
+				if (!is_dir(LOGPATH.$filename)) {
+					mkdir(LOGPATH.$filename, 0777, true);
+				}
+				$fp = fopen(LOGPATH.$filename.'/'.$func.'.csv', 'w');
+				fwrite($fp, implode($data, ','));
+				fclose($fp);
+			}
+		}
+
 		return;
 	}
 }

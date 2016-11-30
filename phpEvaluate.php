@@ -111,68 +111,69 @@ class phpEvaluate
 
 		// Generate evaluation report from data
 		foreach ($this->evData as $evName => $evContent) {
-			$report_content = "";
-			$last_checkpoint = 0;
 			foreach ($evContent['logUpdateTime'] as $key => $logUpdateTime) {
+				$reportContent = "";
+				$evDuration = 0;
 				switch ($evContent['type']) {
 					case EV_START:
 					case EV_END:
 						if ((in_array(EV_START, $show)) || (in_array(EV_END, $show)))
 						{
 							$evDuration = $evContent[EV_END][$key] - $evContent[EV_START][$key];
-							$report_content = number_format($evDuration, 5, '.', '')." secs  (from ".number_format($evContent[EV_START][$key], 4, '.', '')." to ".number_format($evContent[EV_END][$key], 3, '.', '').")";
+							$reportContent = number_format($evDuration, 5, '.', '')." secs  (from ".number_format($evContent[EV_START][$key], 4, '.', '')." to ".number_format($evContent[EV_END][$key], 3, '.', '').")";
 						}
 						break;
 
 					case EV_CHECK:
 						if (in_array(EV_CHECK, $show))
 						{
-							$evDuration = (0 == $last_checkpoint) ? 0 : ($evContent[EV_CHECK][$key] - $last_checkpoint);
-							$report_content = number_format($evDuration, 5, '.', '')." secs  (from ".number_format($last_checkpoint, 4, '.', '')." to ".number_format($evContent[EV_CHECK][$key], 3, '.', '').")";
-							$last_checkpoint = $evContent[EV_CHECK][$key];
+							$lastCheck = $evContent[EV_CHECK][$key - 1];
+							$nowCheck = $evContent[EV_CHECK][$key];
+							$evDuration = $lastCheck ? ($nowCheck - $lastCheck) : 0;
+							$reportContent = number_format($evDuration, 5, '.', '')." secs  (from ".number_format($lastCheck, 4, '.', '')." to ".number_format($nowCheck, 3, '.', '').")";
 						}
 						break;
 
 					case EV_COUNT:
 						if (in_array(EV_COUNT, $show))
 						{
-							$report_content = "Count +1";
+							$reportContent = "Count +1";
 						}
 						break;
 
 					case EV_LOG:
 						if (in_array(EV_LOG, $show))
 						{
-							$report_content = $evContent[EV_LOG][$key];
+							$reportContent = $evContent[EV_LOG][$key];
 						}
 						break;
 
 					default:
 						break;
 				}
-				$report_timestamp = "[".$evContent['logUpdateTime'][$key]."]";
-				$report_name = "[".$evContentDisplay[$evContent['type']]."] ".$evName;
+				$reportTimestamp = "[".$evContent['logUpdateTime'][$key]."]";
+				$reportName = "[".$evContentDisplay[$evContent['type']]."] ".$evName;
 
 				if (empty($evContent['parent']))
 				{
 					$evContent['parent'] = "MAIN";
 				}
-				$report_deep = "DEEP: ".$evContent['deep'];
-				$report_backtrace = "MAIN => ".implode($evContent['backtrace'], " => ");
+				$reportDeep = "DEEP: ".$evContent['deep'];
+				$reportBacktrace = "MAIN => ".implode($evContent['backtrace'], " => ");
 
-				$function_name = array_slice($evContent['backtrace'], -2, 1)[0];
-				$durations[$function_name] += $evDuration;
+				$functionName = array_slice($evContent['backtrace'], -2, 1)[0];
+				$durations[$functionName] += $evDuration;
 				if (EV_END == $evContent['type'])
 				{
-					$iterations[$function_name]++;
+					$iterations[$functionName]++;
 				}
 
 				array_push($evReport, array(
-					'timestamp' => $report_timestamp,
-					'content' => $report_content,
-					'name' => $report_name,
-					'deep' => $report_deep,
-					'backtrace' => $report_backtrace
+					'timestamp' => $reportTimestamp,
+					'content' => $reportContent,
+					'name' => $reportName,
+					'deep' => $reportDeep,
+					'backtrace' => $reportBacktrace
 				));
 			}
 		}
@@ -207,11 +208,11 @@ class phpEvaluate
 			{
 				$func = 'MAIN';
 			}
-			$average_time = $time / $iterations[$func];
+			$averageTime = $time / $iterations[$func];
 			echo str_pad($func, 25, " ").
 			str_pad(number_format($time, 5, '.', '')." secs", 20, " ").
 			str_pad($iterations[$func], 13, " ").
-			str_pad(number_format($average_time, 5, '.', '')." secs", 12, " ").
+			str_pad(number_format($averageTime, 5, '.', '')." secs", 12, " ").
 			"\n";
 		}
 		echo "\n";

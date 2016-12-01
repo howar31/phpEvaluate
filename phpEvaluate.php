@@ -184,8 +184,8 @@ class phpEvaluate
 		}
 
 		// Generate report file
-		if (!is_dir(LOGPATH)) {
-			mkdir(LOGPATH, 0777, true);
+		if (!is_dir(LOGPATH.$filename)) {
+			mkdir(LOGPATH.$filename, 0777, true);
 		}
 		$fp = fopen(LOGPATH.$filename.'/'.$filename.'.log', 'w');
 		fwrite($fp, "\n");

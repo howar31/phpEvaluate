@@ -170,8 +170,8 @@ class phpEvaluate
 				{
 					$durations[$functionName] += $evDuration;
 					$iterations[$functionName]++;
-					array_push($evReportCSV[$evName], $evDuration);
 				}
+				array_push($evReportCSV[$evName], $evDuration);
 
 				array_push($evReport, array(
 					'timestamp' => $reportTimestamp,
@@ -187,7 +187,7 @@ class phpEvaluate
 		if (!is_dir(LOGPATH)) {
 			mkdir(LOGPATH, 0777, true);
 		}
-		$fp = fopen(LOGPATH.$filename.'.log', 'w');
+		$fp = fopen(LOGPATH.$filename.'/'.$filename.'.log', 'w');
 		fwrite($fp, "\n");
 		foreach ($evReport as $report) {
 			if (!empty($report['content']))
@@ -235,7 +235,7 @@ class phpEvaluate
 					mkdir(LOGPATH.$filename, 0777, true);
 				}
 				$fp = fopen(LOGPATH.$filename.'/'.$func.'.csv', 'w');
-				fwrite($fp, implode($data, ','));
+				fwrite($fp, implode($data, "\n"));
 				fclose($fp);
 			}
 		}
